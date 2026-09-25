@@ -1,4 +1,4 @@
-# NoodleManagerX
+# NoodleManagerBS
 [![Release](https://img.shields.io/github/release/WACOMalt/NoodleManagerBS.svg)](https://github.com/WACOMalt/NoodleManagerBS/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/WACOMalt/NoodleManagerBS/total)](https://github.com/WACOMalt/NoodleManagerBS/releases/latest)
 [![Twitch](https://img.shields.io/twitch/status/Nova_Max_?style=social)](https://www.twitch.tv/Nova_Max_)
