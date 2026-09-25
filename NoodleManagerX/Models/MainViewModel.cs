@@ -11,6 +11,7 @@ using NoodleManagerX.Models.Stages;
 using NoodleManagerX.Mods;
 using NoodleManagerX.ThirdParty.MelonLoader;
 using ReactiveUI;
+using Semver;
 using ReactiveUI.Fody.Helpers;
 using SharpAdbClient;
 using System;
@@ -55,7 +56,7 @@ namespace NoodleManagerX.Models
         public const int TAB_AVATARS = 3;
         public const int TAB_MODS = 4;
 
-        [Reactive] private string version { get; set; } = "V1.1.5";
+        [Reactive] private string version { get; set; } = "V1.2.0";
 
         public static MainViewModel s_instance;
 
@@ -283,24 +284,36 @@ namespace NoodleManagerX.Models
                 });
 
                 twitterCommand = ReactiveCommand.Create(() => { Process.Start(new ProcessStartInfo("https://twitter.com/Nova_Max_") { UseShellExecute = true }); });
-                githubCommand = ReactiveCommand.Create(() => { Process.Start(new ProcessStartInfo("https://github.com/tommaier123/NoodleManagerX") { UseShellExecute = true }); });
+                githubCommand = ReactiveCommand.Create(() => { Process.Start(new ProcessStartInfo("https://github.com/WACOMalt/NoodleManagerBS") { UseShellExecute = true }); });
                 twitchCommand = ReactiveCommand.Create(() => { Process.Start(new ProcessStartInfo("https://www.twitch.tv/nova_max_") { UseShellExecute = true }); });
                 youtubeCommand = ReactiveCommand.Create(() => { Process.Start(new ProcessStartInfo("https://www.youtube.com/channel/UCMebdv6hmIddqPee9AtO6Nw") { UseShellExecute = true }); });
 
                 await LoadSettings();
 
-                if (!settings.ignoreUpdates)
+                // The updater replaces the running .exe using the embedded
+                // UpdateHelper.exe, both of which are Windows-only. Other
+                // platforms install through their own release artifact.
+                if (!settings.ignoreUpdates && OperatingSystem.IsWindows())
                 {
                     try
                     {
-                        Octokit.GitHubClient github = new Octokit.GitHubClient(new Octokit.ProductHeaderValue("NoodleManagerX"));
-                        var all = github.Repository.Release.GetAll("tommaier123", "NoodleManagerX").Result;
+                        Octokit.GitHubClient github = new Octokit.GitHubClient(new Octokit.ProductHeaderValue("NoodleManagerBS"));
+                        var all = github.Repository.Release.GetAll("WACOMalt", "NoodleManagerBS").Result;
                         if (!settings.getBetas) all = all.Where(x => x.Prerelease == false).ToList();
-                        var latest = all.OrderByDescending(x => Int32.Parse(x.TagName.Substring(1).Replace(".", ""))).FirstOrDefault();
+                        // Compare with semver rather than stripping dots and parsing
+                        // an int, which throws on any tag carrying a prerelease or
+                        // build suffix and would disable updates entirely.
+                        SemVersion current;
+                        if (!SemVersion.TryParse(version, SemVersionStyles.Any, out current)) current = null;
 
-                        if (latest != null)
+                        var latest = all
+                            .Where(x => { SemVersion parsed; return SemVersion.TryParse(x.TagName, SemVersionStyles.Any, out parsed); })
+                            .OrderByDescending(x => SemVersion.Parse(x.TagName, SemVersionStyles.Any), SemVersion.PrecedenceComparer)
+                            .FirstOrDefault();
+
+                        if (latest != null && current != null)
                         {
-                            if (Int32.Parse(version.Substring(1).Replace(".", "")) < Int32.Parse(latest.TagName.Substring(1).Replace(".", "")))
+                            if (current.ComparePrecedenceTo(SemVersion.Parse(latest.TagName, SemVersionStyles.Any)) < 0)
                             {
                                 Log("Update available to: " + latest.TagName);
 
@@ -329,7 +342,7 @@ namespace NoodleManagerX.Models
                                         string locationHelper = Path.Combine(temp, "UpdateHelper.exe");
                                         Log("Writing update files to " + temp);
                                         if (System.IO.File.Exists(location)) System.IO.File.Delete(location);
-                                        await client.DownloadFileTaskAsync("https://github.com/tommaier123/NoodleManagerX/releases/download/" + latest.TagName + "/NoodleManagerX.exe", location);
+                                        await client.DownloadFileTaskAsync("https://github.com/WACOMalt/NoodleManagerBS/releases/download/" + latest.TagName + "/NoodleManagerBS.exe", location);
 
                                         using (Stream resourceFile = Assembly.GetExecutingAssembly().GetManifestResourceStream("NoodleManagerX.Resources.UpdateHelper.exe"))
                                         using (System.IO.FileStream fs = System.IO.File.Open(locationHelper, System.IO.FileMode.Create))

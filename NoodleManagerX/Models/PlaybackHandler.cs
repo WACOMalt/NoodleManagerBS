@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Pipes;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
@@ -60,7 +61,20 @@ namespace NoodleManagerX.Models
 
                 try
                 {
-                    socketPath = Path.Combine(Path.GetTempPath(), "nmx-mpv-" + Guid.NewGuid().ToString("N") + ".sock");
+                    // mpv's IPC endpoint is a named pipe on Windows and a unix
+                    // socket everywhere else.
+                    string ipcId = "nmx-mpv-" + Guid.NewGuid().ToString("N");
+                    string ipcEndpoint;
+                    if (OperatingSystem.IsWindows())
+                    {
+                        socketPath = ipcId;
+                        ipcEndpoint = @"\\.\pipe\" + ipcId;
+                    }
+                    else
+                    {
+                        socketPath = Path.Combine(Path.GetTempPath(), ipcId + ".sock");
+                        ipcEndpoint = socketPath;
+                    }
 
                     ProcessStartInfo fetch = new ProcessStartInfo(downloader)
                     {
@@ -108,7 +122,7 @@ namespace NoodleManagerX.Models
                     play.ArgumentList.Add("--idle=no");
                     play.ArgumentList.Add("--msg-level=all=error");
                     play.ArgumentList.Add("--volume=" + ClampVolume(MainViewModel.s_instance.previewVolume));
-                    play.ArgumentList.Add("--input-ipc-server=" + socketPath);
+                    play.ArgumentList.Add("--input-ipc-server=" + ipcEndpoint);
                     play.ArgumentList.Add("-");
 
                     ytdl = Process.Start(fetch);
@@ -174,7 +188,8 @@ namespace NoodleManagerX.Models
 
                     try
                     {
-                        if (socketPath != null && File.Exists(socketPath)) File.Delete(socketPath);
+                        // Only the unix socket is a real file; a named pipe is not.
+                        if (socketPath != null && !OperatingSystem.IsWindows() && File.Exists(socketPath)) File.Delete(socketPath);
                     }
                     catch { }
 
@@ -232,11 +247,25 @@ namespace NoodleManagerX.Models
             // track picks the value up through --volume regardless.
             try
             {
-                using (Socket socket = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified))
+                byte[] command = Encoding.UTF8.GetBytes(
+                    "{\"command\":[\"set_property\",\"volume\"," + ClampVolume(volume) + "]}\n");
+
+                if (OperatingSystem.IsWindows())
                 {
-                    socket.Connect(new UnixDomainSocketEndPoint(socketPath));
-                    string command = "{\"command\":[\"set_property\",\"volume\"," + ClampVolume(volume) + "]}\n";
-                    socket.Send(Encoding.UTF8.GetBytes(command));
+                    using (NamedPipeClientStream pipe = new NamedPipeClientStream(".", socketPath, PipeDirection.Out))
+                    {
+                        pipe.Connect(500);
+                        pipe.Write(command, 0, command.Length);
+                        pipe.Flush();
+                    }
+                }
+                else
+                {
+                    using (Socket socket = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified))
+                    {
+                        socket.Connect(new UnixDomainSocketEndPoint(socketPath));
+                        socket.Send(command);
+                    }
                 }
             }
             catch { }
