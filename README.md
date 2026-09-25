@@ -1,17 +1,16 @@
 # NoodleManagerX
-[![Release](https://img.shields.io/github/release/tommaier123/NoodleManagerX.svg)](https://github.com/tommaier123/NoodleManagerX/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/tommaier123/NoodleManagerX/total)](https://github.com/tommaier123/NoodleManagerX/releases/latest)
+[![Release](https://img.shields.io/github/release/WACOMalt/NoodleManagerBS.svg)](https://github.com/WACOMalt/NoodleManagerBS/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/WACOMalt/NoodleManagerBS/total)](https://github.com/WACOMalt/NoodleManagerBS/releases/latest)
 [![Twitch](https://img.shields.io/twitch/status/Nova_Max_?style=social)](https://www.twitch.tv/Nova_Max_)
 [![Twitter](https://img.shields.io/twitter/follow/Nova_Max_?style=social)](https://twitter.com/Nova_Max_)
 
-## I am no longer actively maintaining this project. Therefore, I can give no guarantee about support, bug fixes, or security issues coming from the end-of-life .NET runtime or any libraries. Use at your own risk.
-### DM me on Discord to be added as a maintainer.
+## The original dev is no longer actively maintaining this project. I am not an official maintainer of this project but needed a working build for Linux. I may keep it up to date, I may not. This project uses AI. Use at your own descretion.
 
 This is a standalone app to download Synth Riders custom content for PC and Quest. 
 Other android based headsets should also work but have not been tested. 
 A version for Mac and Linux is being worked on.
 
-### [Click to download](https://github.com/tommaier123/NoodleManagerX/releases/latest) and check out the [Wiki](https://github.com/tommaier123/NoodleManagerX/wiki) on how to install or use the NoodleManagerX
+### [Click to download](https://github.com/WACOMalt/NoodleManagerBS/releases/latest) and check out the [Wiki](https://github.com/WACOMalt/NoodleManagerBS/wiki) on how to install or use the NoodleManagerBS
 
 <img src="./NoodleManagerX/Assets/NoodleManager.png"/>
 
