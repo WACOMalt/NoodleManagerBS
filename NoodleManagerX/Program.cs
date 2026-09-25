@@ -1,4 +1,5 @@
-﻿using Avalonia;
+using Avalonia;
+using Avalonia.Dialogs;
 using Avalonia.ReactiveUI;
 using Avalonia.Svg.Skia;
 using System;
@@ -26,6 +27,9 @@ namespace NoodleManagerX
             return AppBuilder.Configure<App>()
                 .UseReactiveUI()
                 .UsePlatformDetect()
+                // Avalonia 0.10's GTK folder picker fails with "Unable to initialize GTK
+                // on separate thread"; use Avalonia's own managed chooser instead.
+                .UseManagedSystemDialogs()
                 .LogToTrace();
         }
     }

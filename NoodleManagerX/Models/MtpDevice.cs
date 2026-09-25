@@ -1,4 +1,4 @@
-﻿using MediaDevices;
+using MediaDevices;
 using System;
 using System.Linq;
 using Path = System.IO.Path;
@@ -15,7 +15,20 @@ namespace NoodleManagerX.Models
         {
             if (!connected)
             {
-                var devices = MediaDevice.GetDevices();
+                System.Collections.Generic.List<MediaDevice> devices;
+                try
+                {
+                    devices = MediaDevice.GetDevices().ToList();
+                }
+                catch (Exception mtpEx)
+                {
+                    // Windows Portable Devices (WPD) is unavailable outside Windows.
+                    // Without this guard the exception escapes the constructor's async
+                    // task and the UI never reaches initialized = true.
+                    MainViewModel.Log("MTP unavailable on this platform: " + mtpEx.Message);
+                    if (isCommand) MainViewModel.s_instance.OpenErrorDialog("Quest/MTP access is not available on this platform.");
+                    return;
+                }
                 MainViewModel.Log(devices.Count() + " mtp devices connected");
                 foreach (MediaDevice d in devices)
                 {
